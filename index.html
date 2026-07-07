@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Momentum</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-sub: #475569;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            
+            --color-timeline: #3b82f6;
+            --color-actions: #10b981;
+            --color-commitments: #f97316;
+            --color-targets: #8b5cf6;
+            --color-before-home: #64748b;
+            
+            --priority-high-bg: #fef2f2;
+            --priority-high-border: #f87171;
+            --priority-medium-bg: #fffbeb;
+            --priority-medium-border: #fbbf24;
+            --priority-low-bg: #ffffff;
+            --priority-low-border: #cbd5e1;
+            
+            --radius-lg: 12px;
+            --radius-md: 8px;
+            --radius-sm: 6px;
+            
+            --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+            --shadow-md: 0 2px 4px -1px rgba(15, 23, 42, 0.05);
+            
+            --transition: all 0.2s ease;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            -webkit-font-smoothing: antialiased;
+            overflow-y: auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1440px;
+            margin: 0 auto 16px auto;
+        }
+
+        h1 {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            margin: 0;
+        }
+
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .backup-area button {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 6px 10px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-sub);
+            transition: var(--transition);
+        }
+
+        .backup-area button:hover {
+            background-color: #f1f5f9;
+            color: var(--text-main);
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 3fr 2fr;
+            gap: 16px;
+            max-width: 1440px;
+            margin: 0 auto;
+            align-items: start;
+        }
+
+        .left-pane, .right-pane {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .column {
+            background-color: var(--card-bg);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: var(--radius-lg);
+            padding: 14px;
+            box-sizing: border-box;
+            box-shadow: var(--shadow-md);
+        }
+
+        .column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .column-title {
+            font-size: 15px;
+            font-weight: 700;
+            position: relative;
+            padding-left: 12px;
+        }
+
+        .column-title::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 3px;
+            width: 4px;
+            height: 14px;
+            border-radius: 2px;
+        }
+        #col-before-home .column-title::before { background-color: var(--color-before-home); }
+        #col-time .column-title::before { background-color: var(--color-timeline); }
+        #col-simple .column-title::before { background-color: var(--color-actions); }
+        #col-promise .column-title::before { background-color: var(--color-commitments); }
+        #col-targets .column-title::before { background-color: var(--color-targets); }
+
+        .column-subtitle {
+            font-size: 11px;
+            color: var(--text-sub);
+            margin: -4px 0 10px 0;
+            padding-left: 12px;
+            font-weight: 500;
+        }
+
+        .date-section { margin-bottom: 10px; }
+        .date-section:last-child { margin-bottom: 0; }
+
+        .date-section-title {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            padding-left: 2px;
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 2px;
+        }
+        
+        .date-section-title.overdue-title {
+            color: #ef4444;
+            border-bottom: 1px dashed #f87171;
+        }
+
+        .task-card {
+            background: var(--card-bg);
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid #94a3b8;
+            padding: 6px 10px;
+            border-radius: var(--radius-md);
+            margin-bottom: 5px;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+        }
+
+        .task-card:hover {
+            transform: translateY(-1px);
+            border-color: #cbd5e1;
+        }
+
+        .task-card.priority-high { background-color: var(--priority-high-bg); border-left-color: var(--priority-high-border); }
+        .task-card.priority-medium { background-color: var(--priority-medium-bg); border-left-color: var(--priority-medium-border); }
+        .task-card.priority-low { background-color: var(--priority-low-bg); border-left-color: var(--priority-low-border); }
+        
+        .task-card.alert-active {
+            background-color: #fff5f5 !important;
+            border-left-color: #ef4444 !important;
+            animation: pulse 2.5s infinite;
+        }
+
+        .task-card.overdue-active {
+            background-color: #fff5f5 !important;
+            border-left-color: #ef4444 !important;
+        }
+        .task-card.overdue-active .task-title-input {
+            color: #b91c1c !important;
+            font-weight: 600;
+        }
+        .task-card.overdue-active .badge {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.15); }
+            70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .task-header { display: flex; align-items: center; width: 100%; }
+        
+        .task-checkbox {
+            margin-right: 8px;
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .task-title-input {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-main);
+            border: 1px solid transparent;
+            background: transparent;
+            padding: 1px 4px;
+            border-radius: var(--radius-sm);
+            width: 100%;
+            outline: none;
+        }
+        .task-title-input:focus {
+            background: #ffffff;
+            border-color: #cbd5e1;
+        }
+
+        .task-memo-area {
+            margin-top: 2px;
+            padding-left: 22px;
+        }
+        .task-memo-input {
+            width: 100%;
+            font-size: 11px;
+            color: var(--text-sub);
+            border: 1px solid transparent;
+            background: #f8fafc;
+            padding: 2px 6px;
+            border-radius: var(--radius-sm);
+            outline: none;
+            box-sizing: border-box;
+        }
+        .task-memo-input:focus {
+            background: #ffffff;
+            border-color: #cbd5e1;
+        }
+
+        .task-meta { font-size: 10px; display: flex; gap: 6px; margin-top: 3px; padding-left: 22px; }
+        .badge { background: #f1f5f9; padding: 1px 4px; border-radius: var(--radius-sm); font-weight: 600; color: var(--text-sub); }
+
+        .edit-controls {
+            margin-top: 3px;
+            padding-top: 3px;
+            border-top: 1px dashed #e2e8f0;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 4px;
+            padding-left: 22px;
+        }
+
+        .edit-controls input, .edit-controls select {
+            font-size: 10px;
+            padding: 1px 4px;
+            border: 1px solid #cbd5e1;
+            border-radius: var(--radius-sm);
+            color: var(--text-sub);
+            background: #fff;
+            outline: none;
+        }
+        .edit-controls label { font-size: 10px; color: var(--text-sub); display: flex; align-items: center; gap: 2px; cursor: pointer; }
+
+        .delete-btn { background: none; border: none; color: #f43f5e; cursor: pointer; font-size: 10px; font-weight: 600; margin-left: auto; }
+
+        .btn-section-add {
+            background-color: var(--color-targets);
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .btn-section-add:hover { opacity: 0.9; }
+
+        .before-home-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .before-home-item {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            padding: 5px 8px;
+            border-radius: var(--radius-sm);
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+        .before-home-item.completed span {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+        .link-url-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: var(--radius-sm);
+            width: 22px;
+            height: 22px;
+            margin-left: auto;
+            margin-right: 2px;
+            cursor: pointer;
+            font-size: 11px;
+            text-decoration: none;
+            transition: var(--transition);
+            flex-shrink: 0;
+            box-shadow: var(--shadow-sm);
+        }
+        .link-url-btn:hover {
+            background-color: #f1f5f9;
+            border-color: var(--text-sub);
+            transform: scale(1.05);
+        }
+        .btn-config {
+            background: none;
+            border: none;
+            color: var(--text-sub);
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .btn-config:hover { color: var(--text-main); }
+        
+        .home-manage-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: #f8fafc;
+            padding: 8px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            margin-bottom: 8px;
+        }
+        .home-manage-row1 {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .targets-dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 8px;
+            background: #f1f5f9;
+            padding: 10px;
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+        }
+        .db-card {
+            background: #fff;
+            padding: 6px 8px;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-sm);
+            text-align: center;
+        }
+        .db-label { font-size: 10px; font-weight: 700; color: var(--text-sub); margin-bottom: 2px; }
+        .db-val { font-size: 13px; font-weight: 800; color: var(--text-main); }
+        .db-input {
+            width: 100%;
+            font-size: 11px;
+            font-weight: 800;
+            text-align: center;
+            border: 1px solid #cbd5e1;
+            border-radius: var(--radius-sm);
+            padding: 1px 2px;
+            box-sizing: border-box;
+            color: var(--text-main);
+        }
+
+        .target-card-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .target-card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--color-targets);
+            border-radius: var(--radius-md);
+            padding: 8px 10px;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+        }
+        
+        .target-card-inner {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .target-row-1, .target-row-2 {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+        .target-card-inner input, .target-card-inner select {
+            font-size: 11px;
+            padding: 2px 4px;
+            border: 1px solid #cbd5e1;
+            border-radius: var(--radius-sm);
+            color: var(--text-main);
+            background: #fff;
+            outline: none;
+            box-sizing: border-box;
+        }
+        .target-card-inner label {
+            font-size: 10px;
+            color: var(--text-sub);
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .target-row-3 {
+            margin-top: 2px;
+            border-top: 1px dashed #e2e8f0;
+            padding-top: 4px;
+        }
+        .target-memo-input-full {
+            width: 100%;
+            font-size: 11px;
+            color: var(--text-main);
+            border: 1px solid transparent;
+            background: #f8fafc;
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            outline: none;
+            box-sizing: border-box;
+        }
+        .target-memo-input-full:focus {
+            background: #ffffff;
+            border-color: #cbd5e1;
+        }
+
+        .settled-section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #ef4444;
+            margin: 20px 0 8px 0;
+            padding-bottom: 4px;
+            border-bottom: 2px solid #fee2e2;
+        }
+
+        .status-select-未提出 { background-color: #e2e8f0 !important; color: #475569 !important; border-color: #cbd5e1 !important; }
+        .status-select-書類 { background-color: #faf5ff !important; color: #7e22ce !important; border-color: #e9d5ff !important; }
+        .status-select-一次 { background-color: #eff6ff !important; color: #1d4ed8 !important; border-color: #bfdbfe !important; }
+        .status-select-二次 { background-color: #fefce8 !important; color: #a16207 !important; border-color: #fef08a !important; }
+        .status-select-最終 { background-color: #f0fdf4 !important; color: #15803d !important; border-color: #bbf7d0 !important; }
+        .status-select-内定 { background-color: #475569 !important; color: #ffffff !important; border-color: #334155 !important; }
+        .status-select-決定 { background-color: #fee2e2 !important; color: #b91c1c !important; border-color: #fca5a5 !important; }
+
+        .target-card.status-border-未提出 { border-left-color: #cbd5e1; }
+        .target-card.status-border-書類 { border-left-color: #7e22ce; }
+        .target-card.status-border-一次 { border-left-color: #1d4ed8; }
+        .target-card.status-border-二次 { border-left-color: #a16207; }
+        .target-card.status-border-最終 { border-left-color: #15803d; }
+        .target-card.status-border-内定 { border-left-color: #475569; }
+        .target-card.status-border-決定 { border-left-color: #b91c1c; }
+
+        .fab {
+            position: fixed;
+            bottom: 30px; right: 30px; width: 50px; height: 50px;
+            background-color: var(--text-main); color: white; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center; font-size: 20px;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2); cursor: pointer; border: none;
+            z-index: 999;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.2); backdrop-filter: blur(4px);
+            display: none; justify-content: center; align-items: center; z-index: 1000;
+        }
+
+        .modal-content {
+            background: #ffffff; padding: 24px; border-radius: var(--radius-lg); width: 400px;
+            box-shadow: var(--shadow-lg); border: 1px solid var(--border-color);
+        }
+        .modal-content h3 { margin-top: 0; margin-bottom: 16px; font-size: 18px; font-weight: 800; }
+        
+        .modal-tabs { display: flex; gap: 4px; margin-bottom: 16px; background: #f1f5f9; padding: 2px; border-radius: var(--radius-md); }
+        .modal-tab-btn { background: none; border: none; padding: 6px 12px; font-size: 12px; font-weight: 700; color: var(--text-sub); cursor: pointer; border-radius: var(--radius-sm); flex: 1; }
+        .modal-tab-btn.active { background-color: #ffffff; color: var(--text-main); box-shadow: var(--shadow-sm); }
+        
+        .form-group { display: none; }
+        .form-group.active { display: block; }
+        .form-group input, .form-group select { width: 100%; padding: 8px 10px; margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: var(--radius-sm); box-sizing: border-box; font-size: 13px; }
+        
+        .time-picker-group { display: flex; gap: 6px; align-items: center; margin-bottom: 12px; }
+        .time-picker-group input[type="date"] { margin-bottom: 0; flex: 2; }
+        .time-picker-group select { margin-bottom: 0; flex: 1; text-align: center; }
+        .time-picker-label { font-size: 12px; color: var(--text-sub); font-weight: 600; padding: 0 2px; }
+
+        .checkbox-group { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; font-size: 12px; color: var(--text-sub); font-weight: 600; }
+        .checkbox-group input { width: 14px; height: 14px; margin-bottom: 0; }
+
+        .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+        .modal-actions button { padding: 8px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; cursor: pointer; }
+        .btn-cancel { background: none; border: 1px solid #cbd5e1; color: var(--text-sub); }
+        .btn-submit { background: var(--text-main); color: white; border: none; }
+
+        .undo-toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: #ffffff;
+            padding: 8px 14px;
+            border-radius: var(--radius-md);
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+        .undo-toast.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .undo-btn {
+            background: none;
+            border: none;
+            color: #38bdf8;
+            cursor: pointer;
+            font-weight: 700;
+            padding: 2px 4px;
+            font-size: 12px;
+        }
+        .undo-btn:hover { text-decoration: underline; }
+        .undo-close {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0 2px;
+            line-height: 1;
+        }
+        .undo-close:hover { color: #ffffff; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Momentum</h1>
+        <div class="backup-area">
+            <button onclick="exportData()">Export Data</button>
+            <button onclick="document.getElementById('importFile').click()">Import Data</button>
+            <input type="file" id="importFile" style="display:none" onchange="importData(this)">
+        </div>
+    </header>
+
+    <div class="dashboard">
+        <div class="left-pane">
+            <div class="column" id="col-simple">
+                <div class="column-header">
+                    <div class="column-title">Actions</div>
+                </div>
+                <div class="scrollable-list">
+                    <div class="date-section" id="sec-2-overdue" style="display:none;"><div class="date-section-title overdue-title">Overdue</div><div id="list-2-overdue"></div></div>
+                    <div class="date-section"><div class="date-section-title">Today</div><div id="list-2-today"></div></div>
+                    <div class="date-section"><div class="date-section-title">Tomorrow</div><div id="list-2-tomorrow"></div></div>
+                    <div class="date-section"><div class="date-section-title">Day After Tomorrow</div><div id="list-2-dayafter"></div></div>
+                    <div class="date-section"><div class="date-section-title">Later</div><div id="list-2-later"></div></div>
+                </div>
+            </div>
+
+            <div class="column" id="col-targets">
+                <div class="column-header">
+                    <div class="column-title">Targets</div>
+                    <button class="btn-section-add" onclick="addTargetRow()">＋ ターゲット追加</button>
+                </div>
+
+                <div class="targets-dashboard">
+                    <div class="db-card">
+                        <div class="db-label">Q目標</div>
+                        <input type="number" id="db-target-goal" class="db-input" value="0" oninput="saveTargetsData(); calculateDashboard();">
+                    </div>
+                    <div class="db-card">
+                        <div class="db-label">Q実績</div>
+                        <div class="db-val" id="db-target-result">¥0</div>
+                    </div>
+                    <div class="db-card">
+                        <div class="db-label">Q達成まで残り金額</div>
+                        <div class="db-val" id="db-target-remaining">¥0</div>
+                    </div>
+                    <div class="db-card">
+                        <div class="db-label">Q達成率</div>
+                        <div class="db-val" id="db-target-rate">0%</div>
+                    </div>
+                    <div class="db-card">
+                        <div class="db-label">返戻</div>
+                        <input type="number" id="db-target-refund" class="db-input" value="0" oninput="saveTargetsData(); calculateDashboard();">
+                    </div>
+                </div>
+
+                <div class="target-card-list" id="targets-card-container"></div>
+                <div id="settled-targets-wrapper" style="display: none;">
+                    <div class="settled-section-title">🏆 決定済みターゲット</div>
+                    <div class="target-card-list" id="settled-targets-card-container"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-pane">
+            <div class="column" id="col-before-home">
+                <div class="column-header">
+                    <div class="column-title">Things to do before going home</div>
+                    <button class="btn-config" onclick="openHomeManageModal()">⚙️ 編集</button>
+                </div>
+                <div class="column-subtitle">帰宅前にやるべきことを終わらせましたか？</div>
+                <div class="before-home-list" id="before-home-container"></div>
+            </div>
+
+            <div class="column" id="col-time">
+                <div class="column-header">
+                    <div class="column-title">Timeline</div>
+                </div>
+                <div class="scrollable-list">
+                    <div class="date-section" id="sec-1-overdue" style="display:none;"><div class="date-section-title overdue-title">Overdue</div><div id="list-1-overdue"></div></div>
+                    <div class="date-section"><div class="date-section-title">Today</div><div id="list-1-today"></div></div>
+                    <div class="date-section"><div class="date-section-title">Tomorrow</div><div id="list-1-tomorrow"></div></div>
+                    <div class="date-section"><div class="date-section-title">Day After Tomorrow</div><div id="list-1-dayafter"></div></div>
+                    <div class="date-section"><div class="date-section-title">Later</div><div id="list-1-later"></div></div>
+                </div>
+            </div>
+
+            <div class="column" id="col-promise">
+                <div class="column-header">
+                    <div class="column-title">Commitments</div>
+                </div>
+                <div class="scrollable-list">
+                    <div class="date-section" id="sec-3-overdue" style="display:none;"><div class="date-section-title overdue-title">Overdue</div><div id="list-3-overdue"></div></div>
+                    <div class="date-section"><div class="date-section-title">Today</div><div id="list-3-today"></div></div>
+                    <div class="date-section"><div class="date-section-title">Tomorrow</div><div id="list-3-tomorrow"></div></div>
+                    <div class="date-section"><div class="date-section-title">Day After Tomorrow</div><div id="list-3-dayafter"></div></div>
+                    <div class="date-section"><div class="date-section-title">Later</div><div id="list-3-later"></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="fab" onclick="openModal()">＋</button>
+
+    <div class="modal-overlay" id="taskModal">
+        <div class="modal-content">
+            <h3>New Task</h3>
+            <div class="modal-tabs">
+                <button class="modal-tab-btn" id="tab-btn-1" onclick="switchForm(1)">Timeline</button>
+                <button class="modal-tab-btn active" id="tab-btn-2" onclick="switchForm(2)">Actions</button>
+                <button class="modal-tab-btn" id="tab-btn-3" onclick="switchForm(3)">Commitments</button>
+            </div>
+
+            <input type="text" id="shared-task-title" placeholder="タスク・予定の名称を入力..." style="width: 100%; padding: 8px 10px; margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: var(--radius-sm); box-sizing: border-box; font-size: 13px;">
+
+            <div class="form-group" id="form-type-1">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="t1-date-only" onchange="toggleTimeInput(1)">
+                    <label for="t1-date-only">時間を指定しない（日付のみ設定）</label>
+                </div>
+                <div class="time-picker-group" id="t1-picker-wrapper">
+                    <input type="date" id="t1-date-part">
+                    <select id="t1-hour-part"></select>
+                    <span class="time-picker-label">:</span>
+                    <select id="t1-minute-part">
+                        <option value="00">00</option>
+                        <option value="15">15</option>
+                        <option value="30">30</option>
+                        <option value="45">45</option>
+                    </select>
+                </div>
+                <input type="date" id="t1-date-only-input" style="display:none;">
+                <input type="text" id="t1-category" placeholder="メモ・カテゴリ（例：営業、社内）">
+            </div>
+
+            <div class="form-group active" id="form-type-2">
+                <select id="t2-day" style="width: 100%; padding: 8px 10px; margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: var(--radius-sm); box-sizing: border-box; font-size: 13px;">
+                    <option value="today">今日やる</option>
+                    <option value="tomorrow">明日やる</option>
+                    <option value="dayafter">明後日やる</option>
+                    <option value="later">それ以降にやる</option>
+                </select>
+                <select id="t2-priority" style="width: 100%; padding: 8px 10px; margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: var(--radius-sm); box-sizing: border-box; font-size: 13px;">
+                    <option value="3">優先度：高</option>
+                    <option value="2">優先度：中</option>
+                    <option value="1" selected>優先度：低</option>
+                </select>
+                <input type="text" id="t2-category" placeholder="メモ・カテゴリ（例：事務、審査）">
+            </div>
+
+            <div class="form-group" id="form-type-3">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="t3-date-only" onchange="toggleTimeInput(3)">
+                    <label for="t3-date-only">時間を指定しない（日付のみ設定）</label>
+                </div>
+                <div class="time-picker-group" id="t3-picker-wrapper">
+                    <input type="date" id="t3-date-part">
+                    <select id="t3-hour-part"></select>
+                    <span class="time-picker-label">:</span>
+                    <select id="t3-minute-part">
+                        <option value="00">00</option>
+                        <option value="15">15</option>
+                        <option value="30">30</option>
+                        <option value="45">45</option>
+                    </select>
+                </div>
+                <input type="date" id="t3-date-only-input" style="display:none;">
+                <input type="text" id="t3-category" placeholder="メモ・カテゴリ（例：回収、顧客連絡）">
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+                <button class="btn-submit" onclick="submitTask()">タスクを追加</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="homeManageModal">
+        <div class="modal-content" style="width: 480px;">
+            <h3>帰宅前タスクの編集</h3>
+            <div id="home-modal-items-container" style="max-height: 350px; overflow-y: auto; margin-bottom: 16px;"></div>
+            <button class="btn-section-add" onclick="addHomeManageRow('', '')" style="width: 100%; margin-bottom: 16px; background-color: var(--color-before-home);">＋ 新しい帰宅前タスクを追加</button>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeHomeManageModal()">キャンセル</button>
+                <button class="btn-submit" onclick="saveHomeManageList()" style="background-color: var(--color-before-home);">設定を保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="undo-toast" id="undoToast">
+        <span id="undoMessage">タスクを完了しました</span>
+        <button class="undo-btn" onclick="triggerUndo()">元に戻す</button>
+        <button class="undo-close" onclick="hideUndoToast()">✕</button>
+    </div>
+
+    <script>
+        const initialTasks = [
+            {"id":"1","type":1,"completed":false,"title":"WEB面談：田中太郎様","datetime":"2026-07-10T10:00","category":"転職希望条件のヒアリング"},
+            {"id":"2","type":2,"completed":false,"title":"サンプル株式会社様 推薦書類の添削","day":"today","priority":3,"category":"急ぎ"},
+            {"id":"3","type":2,"completed":false,"title":"求人追加・マッチング精査","day":"today","priority":2,"category":""}
+        ];
+        const initialTargets = [
+            {"id":"1","canName":"山田花子","cltName":"サンプルテクノロジー株式会社","status":"一次","actionDate":"2026-07-12","settleDate":"2026-07-25","rate":35,"desiredSalary":4500000,"finalAmount":787500,"isCustomAmount":false,"accuracy":40,"memo":"一次面接対策の連絡をする"},
+            {"id":"2","canName":"佐藤健太","cltName":"テストソリューションズ株式会社","status":"決定","actionDate":"","settleDate":"","rate":0,"desiredSalary":0,"finalAmount":800000,"isCustomAmount":true,"accuracy":0,"memo":""}
+        ];
+        const initialGoal = "3000000";
+        const initialRefund = "0";
+        const initialBeforeHome = [
+            {"text":"社内管理ツールの更新","completed":false,"url":""},
+            {"text":"進捗管理シートの同期","completed":false,"url":""},
+            {"text":"翌営業日のスケジュール確認","completed":false,"url":""}
+        ];
+
+        if (!localStorage.getItem('momentum_initialized')) {
+            localStorage.setItem('momentum_tasks', JSON.stringify(initialTasks));
+            localStorage.setItem('momentum_targets', JSON.stringify(initialTargets));
+            localStorage.setItem('momentum_target_goal', initialGoal);
+            localStorage.setItem('momentum_target_refund', initialRefund);
+            localStorage.setItem('momentum_before_home', JSON.stringify(initialBeforeHome));
+            localStorage.setItem('momentum_initialized', 'true');
+        }
+
+        let tasks = JSON.parse(localStorage.getItem('momentum_tasks')) || initialTasks;
+        let targets = JSON.parse(localStorage.getItem('momentum_targets')) || initialTargets;
+        let targetGoal = parseFloat(localStorage.getItem('momentum_target_goal')) || parseFloat(initialGoal);
+        let targetRefund = parseFloat(localStorage.getItem('momentum_target_refund')) || parseFloat(initialRefund);
+        let beforeHomeTasks = JSON.parse(localStorage.getItem('momentum_before_home')) || initialBeforeHome;
+
+        let currentActiveFormType = 2;
+        let lastAction = null;
+        let undoTimeoutId = null;
+        let lastDateTracked = localStorage.getItem('momentum_last_date') || new Date().toISOString().split('T')[0];
+
+        window.onload = function() {
+            initHourSelectors();
+            
+            document.getElementById('db-target-goal').value = targetGoal;
+            document.getElementById('db-target-refund').value = targetRefund;
+
+            checkAndResetDailyTasks();
+            renderTasks();
+            renderTargets();
+            renderBeforeHomeTasks();
+            
+            setInterval(() => {
+                checkAndResetDailyTasks();
+                renderTasksSilent(); 
+            }, 30000); 
+        };
+
+        function checkAndResetDailyTasks() {
+            const todayStr = new Date().toISOString().split('T')[0];
+            if (lastDateTracked !== todayStr) {
+                beforeHomeTasks.forEach(t => t.completed = false);
+                lastDateTracked = todayStr;
+                localStorage.setItem('momentum_last_date', todayStr);
+                localStorage.setItem('momentum_before_home', JSON.stringify(beforeHomeTasks));
+                renderBeforeHomeTasks();
+            }
+        }
+
+        function initHourSelectors() {
+            [1, 3].forEach(type => {
+                const hourSelect = document.getElementById(`t${type}-hour-part`);
+                if(hourSelect) {
+                    hourSelect.innerHTML = '';
+                    for (let i = 0; i < 24; i++) {
+                        const hStr = String(i).padStart(2, '0');
+                        hourSelect.insertAdjacentHTML('beforeend', `<option value="${hStr}">${hStr}</option>`);
+                    }
+                    hourSelect.value = "12";
+                }
+            });
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('momentum_tasks', JSON.stringify(tasks));
+        }
+
+        function saveTargetsData() {
+            localStorage.setItem('momentum_targets', JSON.stringify(targets));
+            localStorage.setItem('momentum_target_goal', document.getElementById('db-target-goal').value);
+            localStorage.setItem('momentum_target_refund', document.getElementById('db-target-refund').value);
+        }
+
+        function showUndoToast(message, actionData) {
+            if (undoTimeoutId) clearTimeout(undoTimeoutId);
+            lastAction = actionData;
+            document.getElementById('undoMessage').innerText = message;
+            const toast = document.getElementById('undoToast');
+            toast.classList.add('show');
+            
+            undoTimeoutId = setTimeout(() => {
+                hideUndoToast();
+            }, 10000); 
+        }
+
+        function hideUndoToast() {
+            const toast = document.getElementById('undoToast');
+            toast.classList.remove('show');
+            lastAction = null;
+        }
+
+        function triggerUndo() {
+            if (!lastAction) return;
+            if (lastAction.type === 'normal') {
+                const task = tasks.find(t => t.id === lastAction.id);
+                if (task) task.completed = false;
+                saveToStorage();
+                renderTasks();
+            } else if (lastAction.type === 'home') {
+                if (beforeHomeTasks[lastAction.index]) {
+                    beforeHomeTasks[lastAction.index].completed = false;
+                }
+                localStorage.setItem('momentum_before_home', JSON.stringify(beforeHomeTasks));
+                renderBeforeHomeTasks();
+            }
+            hideUndoToast();
+        }
+
+        function renderBeforeHomeTasks() {
+            const container = document.getElementById('before-home-container');
+            if(!container) return;
+            container.innerHTML = '';
+            if(beforeHomeTasks.length === 0) {
+                container.innerHTML = '<div style="font-size:11px; color:var(--text-muted); padding:4px;">登録された帰宅前タスクはありません。</div>';
+                return;
+            }
+            beforeHomeTasks.forEach((t, idx) => {
+                let urlButtonHTML = '';
+                if (t.url && t.url.trim() !== "") {
+                    let formattedUrl = t.url.trim();
+                    if (!/^https?:\/\//i.test(formattedUrl)) {
+                        formattedUrl = 'https://' + formattedUrl;
+                    }
+                    urlButtonHTML = `<a href="${formattedUrl}" target="_blank" rel="noopener noreferrer" class="link-url-btn" title="リンク先を開く">🔗</a>`;
+                }
+
+                const html = `
+                    <div class="before-home-item ${t.completed ? 'completed' : ''}">
+                        <input type="checkbox" class="task-checkbox" ${t.completed ? 'checked' : ''} onclick="toggleBeforeHomeComplete(${idx})">
+                        <span>${t.text}</span>
+                        ${urlButtonHTML}
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        function toggleBeforeHomeComplete(index) {
+            beforeHomeTasks[index].completed = !beforeHomeTasks[index].completed;
+            localStorage.setItem('momentum_before_home', JSON.stringify(beforeHomeTasks));
+            renderBeforeHomeTasks();
+
+            if (beforeHomeTasks[index].completed) {
+                showUndoToast('帰宅前タスクを完了しました', { type: 'home', index: index });
+            }
+        }
+
+        function openHomeManageModal() {
+            document.getElementById('homeManageModal').style.display = 'flex';
+            const container = document.getElementById('home-modal-items-container');
+            container.innerHTML = '';
+            beforeHomeTasks.forEach(t => addHomeManageRow(t.text, t.url || ''));
+            if(beforeHomeTasks.length === 0) addHomeManageRow('', '');
+        }
+
+        function closeHomeManageModal() {
+            document.getElementById('homeManageModal').style.display = 'none';
+        }
+
+        function addHomeManageRow(textVal, urlVal) {
+            const container = document.getElementById('home-modal-items-container');
+            const html = `
+                <div class="home-manage-item">
+                    <div class="home-manage-row1">
+                        <input type="text" value="${textVal}" class="manage-home-input" style="flex:1; font-size:12px; padding:6px; border:1px solid #cbd5e1; border-radius:var(--radius-sm);" placeholder="タスクの内容を入力...">
+                        <button class="delete-btn" onclick="this.parentElement.parentElement.remove()" style="margin-left:0;">削除</button>
+                    </div>
+                    <input type="text" value="${urlVal}" class="manage-home-url-input" style="font-size:11px; padding:4px 6px; border:1px solid #e2e8f0; border-radius:var(--radius-sm); color:var(--text-sub);" placeholder="ジャンプ先URLを入力（任意）例: https://docs.google.com/...">
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+        }
+
+        function saveHomeManageList() {
+            const items = document.querySelectorAll('.home-manage-item');
+            const newList = [];
+            
+            items.forEach(item => {
+                const textInput = item.querySelector('.manage-home-input');
+                const urlInput = item.querySelector('.manage-home-url-input');
+                
+                const text = textInput ? textInput.value.trim() : "";
+                const url = urlInput ? urlInput.value.trim() : "";
+                
+                if(text) {
+                    const existing = beforeHomeTasks.find(old => old.text === text);
+                    newList.push({
+                        text: text,
+                        url: url,
+                        completed: existing ? existing.completed : false
+                    });
+                }
+            });
+            beforeHomeTasks = newList;
+            localStorage.setItem('momentum_before_home', JSON.stringify(beforeHomeTasks));
+            renderBeforeHomeTasks();
+            closeHomeManageModal();
+        }
+
+        function openModal() {
+            document.getElementById('taskModal').style.display = 'flex';
+            document.getElementById('shared-task-title').value = '';
+            
+            const todayStr = new Date().toISOString().split('T')[0];
+            document.getElementById('t1-date-part').value = todayStr;
+            document.getElementById('t3-date-part').value = todayStr;
+            document.getElementById('t1-date-only-input').value = todayStr;
+            document.getElementById('t3-date-only-input').value = todayStr;
+            
+            switchForm(2);
+        }
+
+        function closeModal() {
+            document.getElementById('taskModal').style.display = 'none';
+        }
+
+        function switchForm(type) {
+            currentActiveFormType = type;
+            document.querySelectorAll('.modal-tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.form-group').forEach(fg => fg.classList.remove('active'));
+            document.getElementById(`tab-btn-${type}`).classList.add('active');
+            document.getElementById(`form-type-${type}`).classList.add('active');
+        }
+
+        function toggleTimeInput(type) {
+            const isDateOnly = document.getElementById(`t${type}-date-only`).checked;
+            document.getElementById(`t${type}-picker-wrapper`).style.display = isDateOnly ? 'none' : 'flex';
+            document.getElementById(`t${type}-date-only-input`).style.display = isDateOnly ? 'block' : 'none';
+        }
+
+        function calculateDayFromDate(task) {
+            if (task.type === 2) {
+                if (task.dayStr === 'later' || task.day === 'later') return 'later';
+                
+                let base = task.baseDateStr;
+                if (!base && task.date) base = task.date;
+                if (!base) base = new Date().toISOString().split('T')[0];
+
+                const baseDate = new Date(base + 'T00:00:00');
+                let offset = 0;
+                let dStr = task.dayStr || task.day;
+                if (dStr === 'tomorrow') offset = 1;
+                if (dStr === 'dayafter') offset = 2;
+                
+                const targetTime = baseDate.getTime() + (offset * 1000 * 60 * 60 * 24);
+                const targetDate = new Date(targetTime);
+                targetDate.setHours(0,0,0,0);
+
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+                const diffTime = targetDate.getTime() - today.getTime();
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+                if (diffDays < 0) return 'overdue';
+                if (diffDays === 0) return 'today';
+                if (diffDays === 1) return 'tomorrow';
+                if (diffDays === 2) return 'dayafter';
+                return 'later';
+            } else {
+                const dateStr = task.dateOnly ? task.date : task.datetime;
+                if (!dateStr) return 'later';
+                const targetDateStr = dateStr.split('T')[0];
+                const target = new Date(targetDateStr + 'T00:00:00');
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                
+                const diffTime = target.getTime() - today.getTime();
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+                if (diffDays < 0) return 'overdue'; 
+                if (diffDays === 0) return 'today';
+                if (diffDays === 1) return 'tomorrow';
+                if (diffDays === 2) return 'dayafter';
+                return 'later';
+            }
+        }
+
+        function toggleCardTimeInput(id, isDateOnly) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.dateOnly = isDateOnly;
+                if (isDateOnly) {
+                    task.date = task.datetime ? task.datetime.split('T')[0] : new Date().toISOString().split('T')[0];
+                    task.datetime = '';
+                } else {
+                    task.datetime = task.date ? task.date + 'T12:00' : new Date().toISOString().split('T')[0] + 'T12:00';
+                    task.date = '';
+                }
+                saveToStorage();
+                renderTasks();
+            }
+        }
+
+        function submitTask() {
+            const id = Date.now().toString();
+            const title = document.getElementById('shared-task-title').value;
+            
+            if (!title) return alert('名称を入力してください。');
+
+            let task = { 
+                id: id, 
+                type: parseInt(currentActiveFormType), 
+                title: title, 
+                completed: false 
+            };
+
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            if (currentActiveFormType === 1 || currentActiveFormType === 3) {
+                const type = currentActiveFormType;
+                const isDateOnly = document.getElementById(`t${type}-date-only`).checked;
+                const cat = document.getElementById(`t` + type + `-category`).value;
+
+                task.category = cat || '';
+                task.dateOnly = isDateOnly;
+
+                if (isDateOnly) {
+                    const d = document.getElementById(`t${type}-date-only-input`).value;
+                    if (!d) return alert('日付を選択してください。');
+                    task.date = d;
+                    task.datetime = '';
+                } else {
+                    const dPart = document.getElementById(`t${type}-date-part`).value;
+                    const hPart = document.getElementById(`t${type}-hour-part`).value;
+                    const mPart = document.getElementById(`t${type}-minute-part`).value;
+                    
+                    if (!dPart) return alert('日付を選択してください。');
+                    task.datetime = `${dPart}T${hPart}:${mPart}`;
+                    task.date = '';
+                }
+                
+                document.getElementById(`t` + type + `-category`).value = '';
+                document.getElementById(`t${type}-date-only`).checked = false;
+                toggleTimeInput(type);
+            } else if (currentActiveFormType === 2) {
+                const dayStr = document.getElementById('t2-day').value;
+                const priority = parseInt(document.getElementById('t2-priority').value);
+                const cat = document.getElementById('t2-category').value;
+                
+                task.dayStr = dayStr;
+                task.baseDateStr = todayStr; 
+                task.priority = priority;
+                task.category = cat || '';
+                document.getElementById('t2-category').value = '';
+            }
+
+            tasks.push(task);
+            saveToStorage();
+            renderTasks();
+            closeModal();
+        }
+
+        function deleteTask(id) {
+            if(confirm('このタスクを削除しますか？')) {
+                tasks = tasks.filter(t => t.id !== id);
+                saveToStorage();
+                renderTasks();
+            }
+        }
+
+        function toggleComplete(id) {
+            const task = tasks.find(t => t.id === id);
+            if(task) {
+                task.completed = !task.completed;
+                saveToStorage();
+                setTimeout(renderTasks, 250);
+
+                if (task.completed) {
+                    showUndoToast('タスクを完了しました', { type: 'normal', id: id });
+                }
+            }
+        }
+
+        function updateTaskTimeComponent(id, partType, value) {
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+
+            let currentDt = task.datetime || (new Date().toISOString().split('T')[0] + 'T12:00');
+            let [dPart, tPart] = currentDt.split('T');
+            let [hPart, mPart] = tPart.split(':');
+
+            partType === 'date' ? dPart = value : partType === 'hour' ? hPart = value : mPart = value;
+
+            task.datetime = `${dPart}T${hPart}:${mPart}`;
+            saveToStorage();
+            renderTasks();
+        }
+
+        function updateFieldSilent(id, field, value) {
+            const task = tasks.find(t => t.id === id);
+            if(task) {
+                task[field] = value;
+                saveToStorage();
+            }
+        }
+
+        function updateField(id, field, value) {
+            const task = tasks.find(t => t.id === id);
+            if(task) {
+                if(field === 'priority') value = parseInt(value);
+                task[field] = value;
+                
+                if(field === 'dayStr' || field === 'day') {
+                    task.dayStr = value;
+                    task.day = value;
+                    task.baseDateStr = new Date().toISOString().split('T')[0];
+                }
+
+                saveToStorage();
+                renderTasks();
+            }
+        }
+
+        function generate15MinTimePickerHTML(task) {
+            let currentDt = task.datetime || (new Date().toISOString().split('T')[0] + 'T12:00');
+            let [dPart, tPart] = currentDt.split('T');
+            let [hPart, mPart] = tPart.split(':');
+            hPart = hPart || "12";
+            mPart = mPart || "00";
+
+            let hourOptions = '';
+            for(let i=0; i<24; i++) {
+                let hStr = String(i).padStart(2, '0');
+                hourOptions += `<option value="${hStr}" ${hStr===hPart?'selected':''}>${hStr}</option>`;
+            }
+
+            return `
+                <input type="date" value="${dPart}" onchange="updateTaskTimeComponent('${task.id}', 'date', this.value)">
+                <select onchange="updateTaskTimeComponent('${task.id}', 'hour', this.value)">${hourOptions}</select>
+                <span>:</span>
+                <select onchange="updateTaskTimeComponent('${task.id}', 'minute', this.value)">
+                    <option value="00" ${mPart==='00'?'selected':''}>00</option>
+                    <option value="15" ${mPart==='15'?'selected':''}>15</option>
+                    <option value="30" ${mPart==='30'?'selected':''}>30</option>
+                    <option value="45" ${mPart==='45'?'selected':''}>45</option>
+                </select>
+            `;
+        }
+
+        function renderTasksSilent() {
+            const activeEl = document.activeElement;
+            if (activeEl && (activeEl.classList.contains('task-title-input') || activeEl.classList.contains('task-memo-input'))) {
+                tasks.forEach(t => { if (!t.completed) t.computedDay = calculateDayFromDate(t); });
+                return;
+            }
+            renderTasks();
+        }
+
+        function sortTimelineAndCommitments(a, b) {
+            if (a.dateOnly && !b.dateOnly) return -1;
+            if (!a.dateOnly && b.dateOnly) return 1;
+            if (a.dateOnly && b.dateOnly) {
+                return (a.date || '').localeCompare(b.date || '');
+            }
+            return (a.datetime || '').localeCompare(b.datetime || '');
+        }
+
+        function renderTasks() {
+            const sections = ['today', 'tomorrow', 'dayafter', 'later'];
+            
+            document.getElementById('list-1-overdue').innerHTML = '';
+            document.getElementById('sec-1-overdue').style.display = 'none';
+            document.getElementById('list-2-overdue').innerHTML = '';
+            document.getElementById('sec-2-overdue').style.display = 'none';
+            document.getElementById('list-3-overdue').innerHTML = '';
+            document.getElementById('sec-3-overdue').style.display = 'none';
+
+            sections.forEach(s => {
+                document.getElementById(`list-1-${s}`).innerHTML = '';
+                document.getElementById(`list-2-${s}`).innerHTML = '';
+                document.getElementById(`list-3-${s}`).innerHTML = '';
+            });
+
+            tasks.forEach(t => {
+                if (!t.completed) {
+                    t.computedDay = calculateDayFromDate(t);
+                }
+            });
+
+            const activeTasks = tasks.filter(t => !t.completed);
+
+            const type1Tasks = activeTasks.filter(t => parseInt(t.type) === 1).sort(sortTimelineAndCommitments);
+            const type3Tasks = activeTasks.filter(t => parseInt(t.type) === 3).sort(sortTimelineAndCommitments);
+            const type2Tasks = activeTasks.filter(t => parseInt(t.type) === 2).sort((a, b) => (b.priority || 0) - (a.priority || 0));
+
+            const now = new Date();
+            let hasOverdueTimeline = false;
+            let hasOverdueActions = false;
+            let hasOverdueCommitments = false;
+
+            type1Tasks.forEach(t => {
+                let isAlert = false;
+                const timeBadge = t.dateOnly ? `📅 日付のみ設定` : `⏰ ${t.datetime ? t.datetime.replace('T', ' ') : ''}`;
+                
+                if (t.dateOnly) {
+                    if (t.date) {
+                        const targetDate = new Date(t.date + 'T23:59:59');
+                        isAlert = targetDate < now;
+                    }
+                } else if (t.datetime) {
+                    const targetDate = new Date(t.datetime);
+                    isAlert = targetDate < now;
+                }
+
+                const inputForm = t.dateOnly ? 
+                    `<input type="date" value="${t.date || ''}" onchange="updateField('${t.id}', 'date', this.value)">` :
+                    generate15MinTimePickerHTML(t);
+
+                const html = `
+                    <div class="task-card ${isAlert ? 'alert-active' : ''}">
+                        <div class="task-header">
+                            <input type="checkbox" class="task-checkbox" onclick="toggleComplete('${t.id}')">
+                            <input type="text" class="task-title-input" value="${t.title}" oninput="updateFieldSilent('${t.id}', 'title', this.value)">
+                        </div>
+                        <div class="task-memo-area">
+                            <input type="text" class="task-memo-input" value="${t.category || ''}" placeholder="メモ・カテゴリを追加..." oninput="updateFieldSilent('${t.id}', 'category', this.value)">
+                        </div>
+                        <div class="task-meta">
+                            <span class="badge">${timeBadge}</span>
+                        </div>
+                        <div class="edit-controls">
+                            <div style="display:flex; gap:2px; align-items:center;">${inputForm}</div>
+                            <label><input type="checkbox" ${t.dateOnly ? 'checked' : ''} onchange="toggleCardTimeInput('${t.id}', this.checked)"> 日付のみ</label>
+                            <button class="delete-btn" onclick="deleteTask('${t.id}')">削除</button>
+                        </div>
+                    </div>
+                `;
+
+                if (t.computedDay === 'overdue') {
+                    hasOverdueTimeline = true;
+                    document.getElementById('list-1-overdue').insertAdjacentHTML('beforeend', html);
+                } else if (sections.includes(t.computedDay)) {
+                    document.getElementById(`list-1-${t.computedDay}`).insertAdjacentHTML('beforeend', html);
+                }
+            });
+            if (hasOverdueTimeline) document.getElementById('sec-1-overdue').style.display = 'block';
+
+            type2Tasks.forEach(t => {
+                let pClass = 'priority-low';
+                let pVal = t.priority;
+                if(pVal === 3) pClass = 'priority-high';
+                if(pVal === 2) pClass = 'priority-medium';
+
+                const isOverdue = (t.computedDay === 'overdue');
+                const cardClass = isOverdue ? 'overdue-active' : pClass;
+                const badgeText = isOverdue ? '⚠️ 期限超過' : '';
+                let dStr = t.dayStr || t.day;
+
+                const html = `
+                    <div class="task-card ${cardClass}">
+                        <div class="task-header">
+                            <input type="checkbox" class="task-checkbox" onclick="toggleComplete('${t.id}')">
+                            <input type="text" class="task-title-input" value="${t.title}" oninput="updateFieldSilent('${t.id}', 'title', this.value)">
+                        </div>
+                        <div class="task-memo-area">
+                            <input type="text" class="task-memo-input" value="${t.category || ''}" placeholder="メモ・カテゴリを追加..." oninput="updateFieldSilent('${t.id}', 'category', this.value)">
+                        </div>
+                        <div class="edit-controls">
+                            <select onchange="updateField('${t.id}', 'dayStr', this.value)">
+                                <option value="today" ${dStr==='today'?'selected':''}>今日やる</option>
+                                <option value="tomorrow" ${dStr==='tomorrow'?'selected':''}>明日やる</option>
+                                <option value="dayafter" ${dStr==='dayafter'?'selected':''}>明後日やる</option>
+                                <option value="later" ${dStr==='later'?'selected':''}>それ以降にやる</option>
+                            </select>
+                            <select onchange="updateField('${t.id}', 'priority', this.value)">
+                                <option value="3" ${pVal===3?'selected':''}>高</option>
+                                <option value="2" ${pVal===2?'selected':''}>中</option>
+                                <option value="1" ${pVal===1?'selected':''}>低</option>
+                            </select>
+                            ${badgeText ? `<span class="badge">${badgeText}</span>` : ''}
+                            <button class="delete-btn" onclick="deleteTask('${t.id}')">削除</button>
+                        </div>
+                    </div>
+                `;
+
+                if (isOverdue) {
+                    hasOverdueActions = true;
+                    document.getElementById('list-2-overdue').insertAdjacentHTML('beforeend', html);
+                } else if (sections.includes(t.computedDay)) {
+                    document.getElementById(`list-2-${t.computedDay}`).insertAdjacentHTML('beforeend', html);
+                }
+            });
+            if (hasOverdueActions) document.getElementById('sec-2-overdue').style.display = 'block';
+
+            type3Tasks.forEach(t => {
+                let isAlert = false;
+                let timeBadge = t.dateOnly ? `📅 日付のみ設定` : `⌛ ${t.datetime ? t.datetime.replace('T', ' ') : ''}`;
+                
+                if (t.dateOnly) {
+                    if (t.date) {
+                        const targetDate = new Date(t.date + 'T23:59:59');
+                        isAlert = targetDate < now;
+                    }
+                } else if (t.datetime) {
+                    const targetDate = new Date(t.datetime);
+                    isAlert = targetDate < now;
+                }
+
+                const inputForm = t.dateOnly ? 
+                    `<input type="date" value="${t.date || ''}" onchange="updateField('${t.id}', 'date', this.value)">` :
+                    generate15MinTimePickerHTML(t);
+
+                const html = `
+                    <div class="task-card ${isAlert ? 'alert-active' : ''}">
+                        <div class="task-header">
+                            <input type="checkbox" class="task-checkbox" onclick="toggleComplete('${t.id}')">
+                            <input type="text" class="task-title-input" value="${t.title}" oninput="updateFieldSilent('${t.id}', 'title', this.value)">
+                        </div>
+                        <div class="task-memo-area">
+                            <input type="text" class="task-memo-input" value="${t.category || ''}" placeholder="メモ・カテゴリを追加..." oninput="updateFieldSilent('${t.id}', 'category', this.value)">
+                        </div>
+                        <div class="task-meta">
+                            <span class="badge">${timeBadge}</span>
+                        </div>
+                        <div class="edit-controls">
+                            <div style="display:flex; gap:2px; align-items:center;">${inputForm}</div>
+                            <label><input type="checkbox" ${t.dateOnly ? 'checked' : ''} onchange="toggleCardTimeInput('${t.id}', this.checked)"> 日付のみ</label>
+                            <button class="delete-btn" onclick="deleteTask('${t.id}')">削除</button>
+                        </div>
+                    </div>
+                `;
+
+                if (t.computedDay === 'overdue') {
+                    hasOverdueCommitments = true;
+                    document.getElementById('list-3-overdue').insertAdjacentHTML('beforeend', html);
+                } else if (sections.includes(t.computedDay)) {
+                    document.getElementById(`list-3-${t.computedDay}`).insertAdjacentHTML('beforeend', html);
+                }
+            });
+            if (hasOverdueCommitments) document.getElementById('sec-3-overdue').style.display = 'block';
+        }
+
+        function addTargetRow() {
+            const newTarget = {
+                id: Date.now().toString(),
+                canName: '',
+                cltName: '', 
+                status: '未提出',
+                actionDate: '',
+                settleDate: '',
+                rate: 0,
+                desiredSalary: 0,
+                finalAmount: 0,
+                isCustomAmount: false,
+                accuracy: 0,
+                memo: '',
+                createdAt: Date.now(), 
+                settledAt: 0          
+            };
+            targets.push(newTarget);
+            saveTargetsData();
+            renderTargets();
+        }
+
+        function deleteTargetRow(id) {
+            if(confirm('このターゲットを削除しますか？')) {
+                targets = targets.filter(t => t.id !== id);
+                saveTargetsData();
+                renderTargets();
+            }
+        }
+
+        function updateTargetField(id, field, value) {
+            const target = targets.find(t => t.id !== id ? null : t); // dummy keep safety syntax
+            const tFound = targets.find(t => t.id === id);
+            if (!tFound) return;
+
+            if (field === 'rate' || field === 'desiredSalary' || field === 'accuracy' || field === 'finalAmount') {
+                value = parseFloat(value) || 0;
+            }
+
+            if (field === 'status') {
+                if (value === '決定' && tFound.status !== '決定') {
+                    tFound.settledAt = Date.now();
+                } else if (value !== '決定') {
+                    tFound.settledAt = 0;
+                }
+            }
+
+            tFound[field] = value;
+
+            if ((field === 'desiredSalary' || field === 'rate') && !tFound.isCustomAmount) {
+                tFound.finalAmount = (tFound.desiredSalary * (tFound.rate / 100)) / 2;
+            }
+
+            if (field === 'finalAmount') {
+                tFound.isCustomAmount = true;
+            }
+
+            saveTargetsData();
+
+            if (field === 'actionDate' || field === 'status') {
+                renderTargets();
+            } else {
+                calculateDashboard();
+            }
+        }
+
+        function renderTargets() {
+            const activeContainer = document.getElementById('targets-card-container');
+            const settledContainer = document.getElementById('settled-targets-card-container');
+            const settledWrapper = document.getElementById('settled-targets-wrapper');
+            
+            if(!activeContainer) return;
+            activeContainer.innerHTML = '';
+            settledContainer.innerHTML = '';
+
+            const activeTargets = targets.filter(t => t.status !== '決定').sort((a, b) => {
+                if (!a.actionDate && !b.actionDate) {
+                    return (b.createdAt || 0) - (a.createdAt || 0);
+                }
+                if (!a.actionDate) return -1;
+                if (!b.actionDate) return 1;
+                return new Date(a.actionDate) - new Date(b.actionDate);
+            });
+
+            const settledTargets = targets.filter(t => t.status === '決定').sort((a, b) => {
+                return (b.settledAt || b.createdAt || 0) - (a.settledAt || a.createdAt || 0);
+            });
+
+            if (settledTargets.length > 0) {
+                settledWrapper.style.display = 'block';
+            } else {
+                settledWrapper.style.display = 'none';
+            }
+
+            const createCardHTML = (t) => {
+                return `
+                    <div class="target-card status-border-${t.status}" id="target-card-${t.id}">
+                        <div class="target-card-inner">
+                            <div class="target-row-1">
+                                <select onchange="updateTargetField('${t.id}', 'status', this.value)" class="status-select-${t.status}" style="width:75px; font-weight:700;">
+                                    <option value="未提出" ${t.status==='未提出'?'selected':''}>未提出</option>
+                                    <option value="書類" ${t.status==='書類'?'selected':''}>書類</option>
+                                    <option value="一次" ${t.status==='一次'?'selected':''}>一次</option>
+                                    <option value="二次" ${t.status==='二次'?'selected':''}>二次</option>
+                                    <option value="最終" ${t.status==='最終'?'selected':''}>最終</option>
+                                    <option value="内定" ${t.status==='内定'?'selected':''}>内定</option>
+                                    <option value="決定" ${t.status==='決定'?'selected':''}>決定</option>
+                                </select>
+                                <input type="text" value="${t.canName || ''}" oninput="updateTargetField('${t.id}', 'canName', this.value)" placeholder="CAN名" style="width:110px;">
+                                <input type="text" value="${t.cltName || ''}" oninput="updateTargetField('${t.id}', 'cltName', this.value)" placeholder="CLT名" style="width:110px;">
+                                <label>確度:<input type="number" value="${t.accuracy || 0}" oninput="updateTargetField('${t.id}', 'accuracy', this.value)" style="width:45px; text-align:right;">%</label>
+                                <label>次回アクション日:<input type="date" value="${t.actionDate || ''}" onchange="updateTargetField('${t.id}', 'actionDate', this.value)" style="width:115px;"></label>
+                                
+                                <button class="delete-btn" onclick="deleteTargetRow('${t.id}')" style="margin-left: auto;">削除</button>
+                            </div>
+                            
+                            <div class="target-row-2">
+                                <label>希望年収:<input type="number" value="${t.desiredSalary || 0}" oninput="updateTargetField('${t.id}', 'desiredSalary', this.value)" style="width:85px; text-align:right;" placeholder="円"></label>
+                                <label>料率:<input type="number" value="${t.rate || 0}" oninput="updateTargetField('${t.id}', 'rate', this.value)" style="width:45px; text-align:right;">%</label>
+                                <label>決定金額:<input type="number" id="amount-${t.id}" value="${t.finalAmount || 0}" oninput="updateTargetField('${t.id}', 'finalAmount', this.value)" style="width:95px; text-align:right; font-weight:700;" placeholder="円"></label>
+                                <label>決着予定日:<input type="date" value="${t.settleDate || ''}" onchange="updateTargetField('${t.id}', 'settleDate', this.value)" style="width:115px;"></label>
+                            </div>
+                            
+                            <div class="target-row-3">
+                                <input type="text" class="target-memo-input-full" value="${t.memo || ''}" oninput="updateTargetField('${t.id}', 'memo', this.value)" placeholder="このターゲットに関する詳細なメモ・交渉履歴・進捗状況などを記載...">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            };
+
+            activeTargets.forEach(t => activeContainer.insertAdjacentHTML('beforeend', createCardHTML(t)));
+            settledTargets.forEach(t => settledContainer.insertAdjacentHTML('beforeend', createCardHTML(t)));
+
+            calculateDashboard();
+        }
+
+        function calculateDashboard() {
+            const goalEl = document.getElementById('db-target-goal');
+            const refundEl = document.getElementById('db-target-refund');
+            if(!goalEl || !refundEl) return;
+
+            const goalInput = parseFloat(goalEl.value) || 0;
+            const refundInput = parseFloat(refundEl.value) || 0;
+
+            targetGoal = goalInput;
+            targetRefund = refundInput;
+
+            let resultSum = 0;
+            targets.forEach(t => {
+                if (t.status === '決定') {
+                    resultSum += (t.finalAmount || 0);
+                }
+            });
+
+            const remaining = goalInput - resultSum + refundInput;
+            
+            let rate = 0;
+            if (goalInput > 0) {
+                rate = Math.round(((resultSum - refundInput) / goalInput) * 100);
+            }
+
+            document.getElementById('db-target-result').innerText = '¥' + resultSum.toLocaleString();
+            document.getElementById('db-target-remaining').innerText = '¥' + remaining.toLocaleString();
+            document.getElementById('db-target-rate').innerText = rate + '%';
+            
+            targets.forEach(t => {
+                const amtEl = document.getElementById(`amount-${t.id}`);
+                if (amtEl && document.activeElement !== amtEl) {
+                    amtEl.value = t.finalAmount || 0;
+                }
+            });
+        }
+
+        function exportData() {
+            const backupData = {
+                tasks: tasks,
+                targets: targets,
+                targetGoal: document.getElementById('db-target-goal').value,
+                targetRefund: document.getElementById('db-target-refund').value,
+                beforeHomeTasks: beforeHomeTasks
+            };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `momentum_total_backup_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importData(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (importedData) {
+                        tasks = importedData.tasks || [];
+                        targets = importedData.targets || [];
+                        targetGoal = parseFloat(importedData.targetGoal) || 0;
+                        targetRefund = parseFloat(importedData.targetRefund) || 0;
+                        beforeHomeTasks = importedData.beforeHomeTasks || [];
+
+                        document.getElementById('db-target-goal').value = targetGoal;
+                        document.getElementById('db-target-refund').value = targetRefund;
+
+                        saveToStorage();
+                        saveTargetsData();
+                        localStorage.setItem('momentum_before_home', JSON.stringify(beforeHomeTasks));
+                        
+                        renderTasks();
+                        renderTargets();
+                        renderBeforeHomeTasks();
+                        alert('データを正常に読み込みました。');
+                    }
+                } catch (err) {
+                    alert('JSONファイルの読み込みに失敗しました。');
+                }
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
